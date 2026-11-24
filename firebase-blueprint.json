@@ -1,0 +1,303 @@
+{
+  "entities": {
+    "UserPrivateProfile": {
+      "title": "UserPrivateProfile",
+      "description": "Private student growth profile, PII (email), and personal activity/stat/item state strictly restricted to the verified owner.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Firebase Auth UID of the owner."
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Owner email (PII - never exposed publicly)."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Student nickname or name."
+        },
+        "grade": {
+          "type": "string",
+          "enum": ["고1", "고2", "고3"],
+          "description": "High school grade."
+        },
+        "track": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Academic or career track."
+        },
+        "isPublicInRanking": {
+          "type": "boolean",
+          "description": "Whether the student opts into appearing on the non-PII leaderboard."
+        },
+        "totalXp": {
+          "type": "number",
+          "description": "Total accumulated character XP."
+        },
+        "coins": {
+          "type": "number",
+          "description": "Growth coins balance."
+        },
+        "spentBonusPoints": {
+          "type": "number",
+          "description": "Allocated level-up bonus points."
+        },
+        "bonusAllocations": {
+          "type": "object",
+          "description": "Map of core stat bonus point allocations."
+        },
+        "itemStatBonuses": {
+          "type": "object",
+          "description": "Map of instant item stat bonuses."
+        },
+        "rareStats": {
+          "type": "object",
+          "description": "Map of rare stats earned from challenges."
+        },
+        "logs": {
+          "type": "array",
+          "description": "Student activity history logs (up to 300 recent entries)."
+        },
+        "quests": {
+          "type": "array",
+          "description": "Daily quest items."
+        },
+        "customChallenges": {
+          "type": "array",
+          "description": "User-created custom challenges."
+        },
+        "participations": {
+          "type": "array",
+          "description": "Active and completed challenge participations."
+        },
+        "badges": {
+          "type": "array",
+          "description": "Unlocked achievement badges."
+        },
+        "customEvents": {
+          "type": "array",
+          "description": "User-created date-specific stat events."
+        },
+        "claimedEventDates": {
+          "type": "array",
+          "description": "Claimed special event date keys."
+        },
+        "inventory": {
+          "type": "object",
+          "description": "Owned items map (itemId -> quantity)."
+        },
+        "equippedGearIds": {
+          "type": "array",
+          "description": "Equipped gear IDs (max 2)."
+        },
+        "activeBuffs": {
+          "type": "object",
+          "description": "Active next-activity item buffs."
+        },
+        "selectedGoalIds": {
+          "type": "array",
+          "description": "Selected level/stat-gated mastery goal IDs."
+        },
+        "completedGoalIds": {
+          "type": "array",
+          "description": "Completed mastery goal IDs."
+        },
+        "defeatedMonsters": {
+          "type": "object",
+          "description": "Map of defeated dungeon monster/boss IDs to defeat counts."
+        },
+        "unlockedTitleIds": {
+          "type": "array",
+          "description": "List of unlocked achievement title IDs."
+        },
+        "equippedTitleId": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Equipped display title ID (empty string if none)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest update."
+        }
+      },
+      "required": [
+        "uid",
+        "email",
+        "displayName",
+        "grade",
+        "track",
+        "isPublicInRanking",
+        "totalXp",
+        "coins",
+        "spentBonusPoints",
+        "bonusAllocations",
+        "itemStatBonuses",
+        "rareStats",
+        "logs",
+        "quests",
+        "customChallenges",
+        "participations",
+        "badges",
+        "customEvents",
+        "claimedEventDates",
+        "inventory",
+        "equippedGearIds",
+        "activeBuffs",
+        "selectedGoalIds",
+        "completedGoalIds",
+        "defeatedMonsters",
+        "unlockedTitleIds",
+        "equippedTitleId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Strictly non-PII ranking summary for opted-in students. Contains zero emails, memos, or private details.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "nickname": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "grade": {
+          "type": "string",
+          "enum": ["고1", "고2", "고3"]
+        },
+        "track": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "level": {
+          "type": "number"
+        },
+        "totalXp": {
+          "type": "number"
+        },
+        "totalPower": {
+          "type": "number"
+        },
+        "knowledge": {
+          "type": "number"
+        },
+        "stamina": {
+          "type": "number"
+        },
+        "autonomy": {
+          "type": "number"
+        },
+        "focus": {
+          "type": "number"
+        },
+        "inquiry": {
+          "type": "number"
+        },
+        "weeklyMinutes": {
+          "type": "number"
+        },
+        "streak": {
+          "type": "number"
+        },
+        "rareScore": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "uid",
+        "nickname",
+        "grade",
+        "track",
+        "level",
+        "totalXp",
+        "totalPower",
+        "knowledge",
+        "stamina",
+        "autonomy",
+        "focus",
+        "inquiry",
+        "weeklyMinutes",
+        "streak",
+        "rareScore",
+        "updatedAt"
+      ]
+    },
+    "GlobalTitleHolder": {
+      "title": "GlobalTitleHolder",
+      "description": "Immutable first-discoverer record for each title across all verified users (non-PII).",
+      "type": "object",
+      "properties": {
+        "titleId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "firstHolderUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "firstHolderName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "firstHolderGrade": {
+          "type": "string",
+          "enum": ["고1", "고2", "고3"]
+        },
+        "achievedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "titleId",
+        "firstHolderUid",
+        "firstHolderName",
+        "firstHolderGrade",
+        "achievedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserPrivateProfile" },
+      "description": "Private student profile and state document. Owner-only read/write; list queries disabled."
+    },
+    "/leaderboard/{userId}": {
+      "schema": { "$ref": "#/entities/LeaderboardEntry" },
+      "description": "Non-PII ranking card for opted-in students. Readable by verified signed-in users; writable only by owner."
+    },
+    "/global_titles/{titleId}": {
+      "schema": { "$ref": "#/entities/GlobalTitleHolder" },
+      "description": "First discoverer record per title. Readable by verified users; create-once immutable."
+    }
+  }
+}

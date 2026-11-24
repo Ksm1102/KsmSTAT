@@ -1,0 +1,246 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidGrade(g) {
+      return g is string && (g == '고1' || g == '고2' || g == '고3');
+    }
+
+    function isValidCoreStatMap(m) {
+      return m is map
+        && m.keys().hasAll(['knowledge', 'stamina', 'autonomy', 'focus', 'inquiry'])
+        && m.keys().hasOnly(['knowledge', 'stamina', 'autonomy', 'focus', 'inquiry'])
+        && m.knowledge is number && m.knowledge >= 0 && m.knowledge <= 100000
+        && m.stamina is number && m.stamina >= 0 && m.stamina <= 100000
+        && m.autonomy is number && m.autonomy >= 0 && m.autonomy <= 100000
+        && m.focus is number && m.focus >= 0 && m.focus <= 100000
+        && m.inquiry is number && m.inquiry >= 0 && m.inquiry <= 100000;
+    }
+
+    function isValidRareStatMap(m) {
+      return m is map
+        && m.keys().hasAll(['metacognition', 'grit', 'insight'])
+        && m.keys().hasOnly(['metacognition', 'grit', 'insight'])
+        && m.metacognition is number && m.metacognition >= 0 && m.metacognition <= 10000
+        && m.grit is number && m.grit >= 0 && m.grit <= 10000
+        && m.insight is number && m.insight >= 0 && m.insight <= 10000;
+    }
+
+    function isValidActiveBuffs(b) {
+      return b is map
+        && b.keys().hasAll(['xpMultiplier', 'statMultiplier', 'activeBuffNames'])
+        && b.keys().hasOnly(['xpMultiplier', 'statMultiplier', 'activeBuffNames'])
+        && b.xpMultiplier is number && b.xpMultiplier >= 1 && b.xpMultiplier <= 10
+        && b.statMultiplier is number && b.statMultiplier >= 1 && b.statMultiplier <= 10
+        && b.activeBuffNames is list && b.activeBuffNames.size() <= 10
+        && (b.activeBuffNames.size() == 0 || (b.activeBuffNames[0] is string && b.activeBuffNames[0].size() <= 80));
+    }
+
+    function isValidUserPrivateProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid', 'email', 'displayName', 'grade', 'track', 'isPublicInRanking',
+          'totalXp', 'coins', 'spentBonusPoints', 'bonusAllocations', 'itemStatBonuses',
+          'rareStats', 'logs', 'quests', 'customChallenges', 'participations',
+          'badges', 'customEvents', 'claimedEventDates', 'inventory',
+          'equippedGearIds', 'activeBuffs', 'selectedGoalIds', 'completedGoalIds',
+          'defeatedMonsters', 'unlockedTitleIds', 'equippedTitleId', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'email', 'displayName', 'grade', 'track', 'isPublicInRanking',
+          'totalXp', 'coins', 'spentBonusPoints', 'bonusAllocations', 'itemStatBonuses',
+          'rareStats', 'logs', 'quests', 'customChallenges', 'participations',
+          'badges', 'customEvents', 'claimedEventDates', 'inventory',
+          'equippedGearIds', 'activeBuffs', 'selectedGoalIds', 'completedGoalIds',
+          'defeatedMonsters', 'unlockedTitleIds', 'equippedTitleId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 40
+        && isValidGrade(data.grade)
+        && data.track is string && data.track.size() <= 60
+        && data.isPublicInRanking is bool
+        && data.totalXp is number && data.totalXp >= 0 && data.totalXp <= 10000000
+        && data.coins is number && data.coins >= 0 && data.coins <= 10000000
+        && data.spentBonusPoints is number && data.spentBonusPoints >= 0 && data.spentBonusPoints <= 10000
+        && isValidCoreStatMap(data.bonusAllocations)
+        && isValidCoreStatMap(data.itemStatBonuses)
+        && isValidRareStatMap(data.rareStats)
+        && data.logs is list && data.logs.size() <= 300
+        && (data.logs.size() == 0 || data.logs[0] is map)
+        && data.quests is list && data.quests.size() <= 30
+        && (data.quests.size() == 0 || data.quests[0] is map)
+        && data.customChallenges is list && data.customChallenges.size() <= 30
+        && (data.customChallenges.size() == 0 || data.customChallenges[0] is map)
+        && data.participations is list && data.participations.size() <= 50
+        && (data.participations.size() == 0 || data.participations[0] is map)
+        && data.badges is list && data.badges.size() <= 100
+        && (data.badges.size() == 0 || data.badges[0] is map)
+        && data.customEvents is list && data.customEvents.size() <= 50
+        && (data.customEvents.size() == 0 || data.customEvents[0] is map)
+        && data.claimedEventDates is list && data.claimedEventDates.size() <= 200
+        && (data.claimedEventDates.size() == 0 || (data.claimedEventDates[0] is string && data.claimedEventDates[0].size() <= 100))
+        && data.inventory is map && data.inventory.size() <= 50
+        && data.equippedGearIds is list && data.equippedGearIds.size() <= 2
+        && (data.equippedGearIds.size() == 0 || (data.equippedGearIds[0] is string && data.equippedGearIds[0].size() <= 60))
+        && isValidActiveBuffs(data.activeBuffs)
+        && data.selectedGoalIds is list && data.selectedGoalIds.size() <= 30
+        && (data.selectedGoalIds.size() == 0 || (data.selectedGoalIds[0] is string && data.selectedGoalIds[0].size() <= 60))
+        && data.completedGoalIds is list && data.completedGoalIds.size() <= 50
+        && (data.completedGoalIds.size() == 0 || (data.completedGoalIds[0] is string && data.completedGoalIds[0].size() <= 60))
+        && data.defeatedMonsters is map && data.defeatedMonsters.size() <= 30
+        && data.unlockedTitleIds is list && data.unlockedTitleIds.size() <= 50
+        && (data.unlockedTitleIds.size() == 0 || (data.unlockedTitleIds[0] is string && data.unlockedTitleIds[0].size() <= 64))
+        && data.equippedTitleId is string && data.equippedTitleId.size() <= 64
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidLeaderboardEntry(data, userId) {
+      return data.keys().hasAll([
+          'uid', 'nickname', 'grade', 'track', 'level', 'totalXp', 'totalPower',
+          'knowledge', 'stamina', 'autonomy', 'focus', 'inquiry',
+          'weeklyMinutes', 'streak', 'rareScore', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'nickname', 'grade', 'track', 'level', 'totalXp', 'totalPower',
+          'knowledge', 'stamina', 'autonomy', 'focus', 'inquiry',
+          'weeklyMinutes', 'streak', 'rareScore', 'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.nickname is string && data.nickname.size() >= 1 && data.nickname.size() <= 40
+        && isValidGrade(data.grade)
+        && data.track is string && data.track.size() <= 60
+        && data.level is number && data.level >= 1 && data.level <= 500
+        && data.totalXp is number && data.totalXp >= 0 && data.totalXp <= 10000000
+        && data.totalPower is number && data.totalPower >= 0 && data.totalPower <= 500000
+        && data.knowledge is number && data.knowledge >= 0 && data.knowledge <= 100000
+        && data.stamina is number && data.stamina >= 0 && data.stamina <= 100000
+        && data.autonomy is number && data.autonomy >= 0 && data.autonomy <= 100000
+        && data.focus is number && data.focus >= 0 && data.focus <= 100000
+        && data.inquiry is number && data.inquiry >= 0 && data.inquiry <= 100000
+        && data.weeklyMinutes is number && data.weeklyMinutes >= 0 && data.weeklyMinutes <= 20000
+        && data.streak is number && data.streak >= 0 && data.streak <= 3650
+        && data.rareScore is number && data.rareScore >= 0 && data.rareScore <= 30000
+        && data.updatedAt is timestamp;
+    }
+
+    // Private User Profile & Growth State (Strict Owner-Only PII Protection)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserPrivateProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserPrivateProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName', 'grade', 'track', 'isPublicInRanking', 'updatedAt'
+          ])
+          ||
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName', 'grade', 'track', 'isPublicInRanking',
+            'totalXp', 'coins', 'spentBonusPoints', 'bonusAllocations', 'itemStatBonuses',
+            'rareStats', 'logs', 'quests', 'customChallenges', 'participations',
+            'badges', 'customEvents', 'claimedEventDates', 'inventory',
+            'equippedGearIds', 'activeBuffs', 'selectedGoalIds', 'completedGoalIds',
+            'defeatedMonsters', 'unlockedTitleIds', 'equippedTitleId', 'updatedAt'
+          ])
+        );
+      allow delete: if isValidId(userId) && isOwner(userId);
+    }
+
+    // Public-to-Signed-In Non-PII Ranking Summary
+    match /leaderboard/{userId} {
+      allow get: if isValidId(userId) && isVerifiedUser();
+      allow list: if isVerifiedUser()
+        && resource.data.totalPower >= 0;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidLeaderboardEntry(incoming(), userId)
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidLeaderboardEntry(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'nickname', 'grade', 'track', 'level', 'totalXp', 'totalPower',
+          'knowledge', 'stamina', 'autonomy', 'focus', 'inquiry',
+          'weeklyMinutes', 'streak', 'rareScore', 'updatedAt'
+        ]);
+      allow delete: if isValidId(userId) && isOwner(userId);
+    }
+
+    function isValidGlobalTitle(data, titleId) {
+      return data.keys().hasAll([
+          'titleId', 'firstHolderUid', 'firstHolderName', 'firstHolderGrade', 'achievedAt'
+        ])
+        && data.keys().hasOnly([
+          'titleId', 'firstHolderUid', 'firstHolderName', 'firstHolderGrade', 'achievedAt'
+        ])
+        && isValidId(data.titleId)
+        && data.titleId == titleId
+        && data.titleId.size() <= 64
+        && isValidId(data.firstHolderUid)
+        && data.firstHolderUid == request.auth.uid
+        && data.firstHolderName is string
+        && data.firstHolderName.size() >= 1
+        && data.firstHolderName.size() <= 40
+        && isValidGrade(data.firstHolderGrade)
+        && data.achievedAt is timestamp;
+    }
+
+    // Global First-Discoverer Title Registry (Immutable First Claim, Non-PII)
+    match /global_titles/{titleId} {
+      allow get: if isValidId(titleId) && isVerifiedUser();
+      allow list: if isVerifiedUser()
+        && resource.data.firstHolderName is string
+        && resource.data.firstHolderName.size() >= 1;
+      allow create: if isValidId(titleId)
+        && isOwner(incoming().firstHolderUid)
+        && isValidGlobalTitle(incoming(), titleId)
+        && incoming().achievedAt == request.time;
+      allow update, delete: if false;
+    }
+  }
+}
